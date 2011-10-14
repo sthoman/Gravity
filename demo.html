@@ -1,4 +1,6 @@
 <script type="text/javascript" src="lib/jquery-1.5.2.min.js" ></script>
+<script type="text/javascript" src="lib/vector.js" ></script>
+<script type="text/javascript" src="lib/system.js" ></script>
 <script type="text/javascript">
 
     var context;
@@ -20,141 +22,8 @@
 	
 	var _gconstant = 6.674 * Math.pow(10, -11); 
 	
-	var interval = 20; 
-
-   var Starsystem = new function Starsystem() 
-   {
-	var instance = this;
-
-	Starsystem.Instance = function()
-	{
-	    if (_acceleration == null)
-			instance.update(); 
-			
-		return instance; 
-	}
-
-	this.stars = new Object(); 
-
-	this.getStars = function() {
-		return this.stars; 	
-	}
-	
-	this.nearestStar = function(x, y) {
-	
-		var closestStarKey = null; 
-		
-		for (var key in this.stars)
-		{		
-			var star = this.stars[key]; 
-			var closestStar; 
-			
-			if (closestStarKey == null)
-				closestStar = star; 	
-			else
-				closestStar = this.stars[closestStarKey]
-			
-			var dist = star.radialDistanceFrom(x, y); 		
-			var closestDist = closestStar.radialDistanceFrom(x, y); 			
-			if (dist <= closestDist)
-				closestStarKey = key; 
-		}		
-		
-		return closestStarKey; 	
-	}
-
-	this.add = function(key, val) {
-		this.stars[key] = val; 
-	}
+	var interval = 15; 
  
-	this.replace = function(key, val) {
-		delete this.stars[key];
-		this.stars[key] = val; 
-	}
-
-	this.remove = function(key) {
-		delete this.stars[key];
-	}
-	
-	this.update = function() {	
-		_acceleration = getAcceleration(this.stars); 	
-	};
-	
-	var _acceleration; 	
-	this.acceleration = function(xpos, ypos) {
-		return _acceleration(xpos, ypos); 
-	}
-	
-	var getAcceleration = function (thestars) {
-
-        	return function (xpos, ypos) {
-
-					var dx_total = 0; 
-					var dy_total = 0; 
-					
-					for (var key in thestars)
-					{					
-						var star = thestars[key]; 
-						
-						var sep_x = star.XPos - xpos; 
-						var sep_y = star.YPos - ypos; 
-						
-						var _xSqrd = Math.pow(sep_x, 2);
-						var _ySqrd = Math.pow(sep_y, 2);
-
-						var radialDist = Math.sqrt(_xSqrd + _ySqrd);
-						
-						if (radialDist < (star.Radius * 1.05)) {
-							//alert("Collision!");	
-							start(initialx, initialy); 
-						}	
-						
-						var gravityAt = star.gravitationAt(radialDist)				
-						
-						var _dx = (gravityAt * sep_x) / Math.pow(radialDist, 1);
-						var _dy = (gravityAt * sep_y) / Math.pow(radialDist, 1);
-
-						dx_total += _dx; 
-						dy_total += _dy; 
-					}
-					
-					return { dx: dx_total, dy: dy_total }; 
-        	}
-
-    	}  //(Star));
-
-
-		return Starsystem;
-    }
-	
-    function Star(x, y, m, r) {
-
-        this.Mass = m;
-        this.Radius = r;
-        this.XPos = x;
-        this.YPos = y;
-		
-		//default css color	
-		this.Color = "Black"; 
-
-        this.gravitationAt = function (dist) {
-
-            return (_gconstant * this.Mass) / Math.pow(dist, 2);
-        }
-
-		this.radialDistanceFrom = function(x, y) {
-
-			var sep_x = this.XPos - x;
-        	var sep_y = this.YPos - y;
-			
-        	var _xSqrd = Math.pow(sep_x, 2);
-        	var _ySqrd = Math.pow(sep_y, 2);
-
-        	return Math.sqrt(_xSqrd + _ySqrd);
-		}	
-    } 
-
-   
 	var earthStar; 
 	var marsStar; 
 	var venusStar; 
@@ -168,77 +37,45 @@
 	
     var theSystem = Starsystem.Instance(); 
 
-	var leapfrogAlternator = true; 
-	
+    var leapfrogAlternator = true;
+
     function draw() {
-	
-		var stars = theSystem.getStars();   
-	
-        //var accel = theSystem.acceleration(stars); 
+    	
+		var stars = theSystem.stars; 
+		var projectiles = theSystem.projectiles;
 
-        context = myCanvas.getContext('2d');
-        context.clearRect(0, 0, 900, 900);
-        context.beginPath();
-        context.fillStyle = "#0000ff";
-        context.arc(posx, posy, 8, 0, Math.PI * 2, true);
-        context.closePath();
-        context.fill();
+		context = myCanvas.getContext('2d');
+		context.clearRect(0, 0, 900, 900); 
 
-		for (var key in stars)
-		{
-			var star = stars[key];   
+        for (var key in projectiles) {
+                var proj = projectiles[key];
+                var pos = proj.getPosition(); 
 
-			var star_x = star.XPos; 
-			var star_y = star.YPos; 
-			var star_r = star.Radius; 
+		        context.beginPath();
+		        context.fillStyle = self.Color;
+		        context.arc(pos.x, pos.y, proj.Radius, 0, Math.PI * 2, true);
+		        context.closePath();
+		        context.fill();
+		    }
 
-			context.beginPath();
-			context.fillStyle = star.Color; 
-			context.arc(star_x, star_y, star_r, 0, Math.PI * 2, true);
-			context.closePath();
-			context.fill();
-		}
+		for (var key in stars) {
+		        var star = stars[key];
+		        if (typeof star != 'undefined') {
+		            var star_x = star.getPosition().x;
+		            var star_y = star.getPosition().y;
+		            var star_r = star.getRadius();
 
-        var a = theSystem.acceleration(posx, posy);
-		
-		/* TEST ONLY FOR STABLE ORBIT */
-		
-		//var dist = stars['Earth'].radialDistanceFrom(posx, posy); 
-			
-		//THIS IS A TEST OF LEAPFROG METHOD
-		
-		if (leapfrogAlternator == true) // update position only
-		{
-			posx += dx;
-			posy += dy;
+		            context.beginPath();
+		            context.fillStyle = star.Color;
+		            context.arc(star_x, star_y, star_r, 0, Math.PI * 2, true);
+		            context.closePath();
+		            context.fill();
+		        }
+		    }
 
-			leapfrogAlternator = false; 
-		}
-		else // update velocity only
-		{
-			if (posx < 0 || posx > 900) 
-			{
-				dx = -dx;
-			}
-			else if (posy < 0 || posy > 900) 
-			{
-				dy = -dy;
-			}
-			else
-			{
-				dx += a.dx;
-				dy += a.dy;	
-			}
-					
-			if (Math.abs(dx) > 25 || Math.abs(dy) > 25)
-			{
-				//alert("collision velocity");
-				start(initialx, initialy); 
-			}
-		
-			leapfrogAlternator = true; 
-		} 
-
+		for (var key in projectiles) {
+		        projectiles[key].Update(theSystem.acceleration);
+		    }
     }
 
     // this function finds the mouse position inside the canvas
@@ -258,7 +95,7 @@
 	//TODO: this only works on a single planet system, adjust
 	
 	// just to apply initial acceleration in the transverse direction
-	function getTransverseAcceleration(mag, dist, x, y) {
+	/*function getTransverseAcceleration(mag, dist, x, y) {
 	
 		 //var accel = theSystem.acceleration(theSystem.stars);  	 
 		 //var _a = accel(x, y); 	
@@ -271,28 +108,23 @@
 		 var _new_dy = _normal_dy * mag; 
 		 
 		 return { dx: _new_dy, dy: -_new_dx }; 
-	}
+	}*/
 	
-	//DO NOT CHANGE: WORKS FOR STABLE ORBIT (INITIAL VELOCITY)
 	function stableOrbit(dist, x, y) {
+	 
+		 var aceleration = theSystem.acceleration(x, y); 
+		 var magnitude = aceleration.magnitude(); 
+		 var velocity = Math.sqrt(dist * magnitude);
+	     var transverse = aceleration.normalize().transverse(); 
+		 var dx = transverse.x * velocity;  		 
+		 var dy = transverse.y * velocity;  		
 
-		 //var accel = theSystem.acceleration(theSystem.stars);  	 
-		 //var _a = accel(x, y); 	 
-		 var _a = theSystem.acceleration(x, y); 
-		 var _magnitude = Math.sqrt((Math.pow(_a.dx, 2) + Math.pow(_a.dy, 2))); 
-		 var _v = Math.sqrt(dist * _magnitude);
-		 var _normal_dx = _a.dx / _magnitude; 	 
-		 var _normal_dy = _a.dy / _magnitude; 		 
-		 var _new_vector = { dx: _normal_dy, dy: -_normal_dx }; 		 
-		 var _velocityX = _new_vector.dx * _v;  		 
-		 var _velocityY = _new_vector.dy * _v;  		
-
-		 return { dx: _velocityX, dy: _velocityY }; 
+		 return new Vector2(dx, dy); 
 	}
 	
 	
 	//NOTE: This is set for stable orbit initiation
-	var stable; 
+
 	
 	function start(x, y) {
 	
@@ -302,14 +134,27 @@
 		var radiusMars =  document.getElementById("txtRadiusMars").value;
 		var massVenus = document.getElementById("txtMassVenus").value;
 		var radiusVenus =  document.getElementById("txtRadiusVenus").value;
-	
-		theSystem.stars['Earth'].Mass = massEarth;
-        theSystem.stars['Earth'].Radius = radiusEarth;	
-		theSystem.stars['Mars'].Mass = massMars;
-        theSystem.stars['Mars'].Radius = radiusMars;
-		theSystem.stars['Venus'].Mass = massVenus;
-        theSystem.stars['Venus'].Radius = radiusVenus;
-				
+		
+		/*var earth = theSystem.stars['Earth']; 
+		var newEarth = new Star(new Point2D(earth.getPosition().x, earth.getPosition().y), massEarth, radiusEarth); 
+		newEarth.Color = "Blue"; 
+		theSystem.replace('Earth', newEarth); 
+        var mars = theSystem.stars['Mars']; 
+		var newMars = new Star(new Point2D(mars.getPosition().x, mars.getPosition().y), massMars, radiusMars);
+		newMars.Color = "Red"; 
+		theSystem.replace('Mars', newMars); 
+		var venus = theSystem.stars['Venus']; 
+		var newVenus = new Star(new Point2D(venus.getPosition().x, venus.getPosition().y), massVenus, radiusVenus); 
+		newVenus.Color = "Orange"; 
+		theSystem.replace('Venus', newVenus);*/
+
+		theSystem.stars['Earth'].setMass(massEarth); 
+		theSystem.stars['Earth'].setRadius(radiusEarth);
+		theSystem.stars['Mars'].setMass(massMars); 
+		theSystem.stars['Mars'].setRadius(radiusMars);
+		theSystem.stars['Venus'].setMass(massVenus);
+		theSystem.stars['Venus'].setRadius(radiusVenus);
+		
 		posx = initialposx;
 		posy = initialposy;
 		
@@ -327,91 +172,98 @@
 	}
 	
 	//TODO: Make this work
-	function testStable(_posx, _posy)
+	function testStable()
 	{
-		theSystem.replace('Mars', new Star(0, 0, 1, 1)); 
-		theSystem.replace('Venus', new Star(0, 0, 1, 1)); 
-		theSystem.update();
+		theSystem.replace('Mars', new Star(new Point2D(0, 0), 0, 1, 1)); 
+		theSystem.replace('Venus', new Star(new Point2D(0, 0), 0, 1, 1)); 
 		
-		var dist = theSystem.stars['Earth'].radialDistanceFrom(_posx, _posy); 
+		/*theSystem.projectiles['test0'] = new Projectile(new Point2D(375, 450), new Vector2(.1, .1));
+		theSystem.projectiles['test1'] = new Projectile(new Point2D(325, 450), new Vector2(.1, .1));
+		theSystem.projectiles['test2'] = new Projectile(new Point2D(275, 450), new Vector2(.1, .1));
+		theSystem.projectiles['test3'] = new Projectile(new Point2D(225, 450), new Vector2(.1, .1)); 
+		theSystem.projectiles['test4'] = new Projectile(new Point2D(175, 450), new Vector2(.3, .3)); 
+		theSystem.projectiles['test5'] = new Projectile(new Point2D(125, 450), new Vector2(.4, .4)); 
+		theSystem.projectiles['test6'] = new Projectile(new Point2D(75, 450), new Vector2(.4, .4)); */
+			
+		//var projectiles = theSystem.projectiles; 
 		
-		stable = stableOrbit(dist, _posx, _posy);  
-		
-		dx = stable.dx; 
-		dy = stable.dy; 
-		
-		alert(dx + ' ' + dy); 
-		
-		posx = _posx;
-		posy = _posy; 
+		var startingdist = 50; 
 
-		restart(dx, dy); 
+		for (i = 0; i < 6; i++)
+		{
+		    var p = new Point2D(startingdist, 450); 
+			
+			var dist = theSystem.stars['Earth'].getPosition().distance(p.x, p.y); 
+
+			var stable = stableOrbit(dist, p.x, p.y); 
+
+			var name = 'test' + i;  
+		
+			theSystem.projectiles[name] = new Projectile(p, stable); 
+
+			startingdist += 50; 
+			
+		}
+
+		//restart(dx, dy); 
 	}
 
-    $(document).ready(function() {
-	
-		earthStar = new Star(450, 450, 18000000000000, 32); 
-		marsStar = new Star(750, 750, 18000000000000, 32); 
-		venusStar = new Star(150, 150, 18000000000000, 32); 
-		
-		earthStar.Color = "Blue";
-		marsStar.Color = "Red";
-		venusStar.Color = "Orange"; 
-		
-		theSystem.add("Earth", earthStar); 	
-		theSystem.add("Mars", marsStar); 
-		theSystem.add("Venus", venusStar); 
-		
-		var mouseDown = false;
-		var inCircle = false;
-		
-		start(initialx, initialy); 
+	$(document).ready(function () {
 
-		$('#myCanvas').mousedown(function (e) {
-			mouseDown = true; 
-			var pos = findPos(this);
-			var x = e.pageX - pos.x;
-			var y = e.pageY - pos.y;
-			var nearStarName = theSystem.nearestStar(x, y); 
-			var nearStar = theSystem.stars[nearStarName]; 
-			var radialDist = nearStar.radialDistanceFrom(x, y); 
-            if (radialDist < nearStar.Radius) {
-                inCircle = true; 
-            }
-        });
+	    earthStar = new Star(new Point2D(450, 450), 18000000000000, 32);
+	    marsStar = new Star(new Point2D(750, 750), 18000000000000, 32);
+	    venusStar = new Star(new Point2D(150, 150), 18000000000000, 32);
 
-        $('#myCanvas').mouseup(function (e) {
-            if (inCircle) { 
-                var pos = findPos(this);
-                var x = e.pageX - pos.x;
-                var y = e.pageY - pos.y;
-				var nearStarName = theSystem.nearestStar(x, y);
-				var nearStar = theSystem.stars[nearStarName]; 
-				var newStar = new Star(x, y, nearStar.Mass, nearStar.Radius); 
-				newStar.Color = nearStar.Color; 
-				theSystem.replace(nearStarName, newStar); 
-				theSystem.update(); 
-            }
-            mouseDown = false; 
-			inCircle = false; 
-        });
+	    earthStar.Color = "Blue";
+	    marsStar.Color = "Red";
+	    venusStar.Color = "Orange";
 
-        $('#myCanvas').mousemove(function (e) {
-            if (mouseDown && inCircle) {
-                var pos = findPos(this);
-                var x = e.pageX - pos.x;
-                var y = e.pageY - pos.y;
-				var nearStarName = theSystem.nearestStar(x, y); 
-				var nearStar = theSystem.stars[nearStarName]; 
-				var newStar = new Star(x, y, nearStar.Mass, nearStar.Radius); 
-				newStar.Color = nearStar.Color; 
-				theSystem.replace(nearStarName, newStar); 
-				theSystem.update(); 
-            }
-        }); 
+	    theSystem.add("Earth", earthStar);
+	    theSystem.add("Mars", marsStar);
+	    theSystem.add("Venus", venusStar);
 
-		setInterval(draw, interval);
-    }); 
+	    var mouseDown = false;
+	    var inCircle = false;
+
+	    start(initialx, initialy);
+
+	    $('#myCanvas').mousedown(function (e) {
+	        mouseDown = true;
+	        var pos = findPos(this);
+	        var x = e.pageX - pos.x;
+	        var y = e.pageY - pos.y;
+	        var nearStarName = theSystem.nearestStar(x, y);
+	        var nearStar = theSystem.stars[nearStarName];
+	        var radialDist = nearStar.getPosition().distance(x, y);
+	        if (radialDist < nearStar.getRadius()) {
+	            inCircle = true;
+	        }
+	    });
+
+	    $('#myCanvas').mouseup(function (e) {
+	        if (inCircle) {
+	            var pos = findPos(this);
+	            var x = e.pageX - pos.x;
+	            var y = e.pageY - pos.y;
+	            var nearStarName = theSystem.nearestStar(x, y);
+	            theSystem.stars[nearStarName].setPosition(new Point2D(x, y)); 
+	        }
+	        mouseDown = false;
+	        inCircle = false;
+	    });
+
+	    $('#myCanvas').mousemove(function (e) {
+	        if (mouseDown && inCircle) {
+	            var pos = findPos(this);
+	            var x = e.pageX - pos.x;
+	            var y = e.pageY - pos.y;
+	            var nearStarName = theSystem.nearestStar(x, y);
+	            theSystem.stars[nearStarName].setPosition(new Point2D(x, y));
+	        }
+	    });
+
+	    setInterval(draw, interval);
+	}); 
 
     //setInterval(draw, 10);
 
