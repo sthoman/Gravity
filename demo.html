@@ -41,6 +41,39 @@
 		}
 	}
 
+	//TEMPORARY, this belongs in view
+
+	var findPos = function (obj) {
+	    var curleft = 0, curtop = 0;
+	    if (obj.offsetParent) {
+	        do {
+	            curleft += obj.offsetLeft;
+	            curtop += obj.offsetTop;
+	        } while (obj = obj.offsetParent);
+	        return { x: curleft, y: curtop };
+	    }
+	    return undefined;
+	}
+
+	var findNearestStar = function (x, y) {
+	    var closestStarKey = null;
+	    for (var key in System.Core.stars) {
+	        var star = System.Core.stars[key];
+	        if (typeof star != 'undefined') {
+	            var closestStar;
+	            if (closestStarKey == null)
+	                closestStar = star;
+	            else
+	                closestStar = System.Core.stars[closestStarKey]
+	            var dist = star.getPosition().distance(x, y);
+	            var closestDist = closestStar.getPosition().distance(x, y);
+	            if (dist <= closestDist)
+	                closestStarKey = key;
+	        }
+	    }
+	    return closestStarKey;
+	}
+
 	$(document).ready(function () {
 
 	    var earthStar = new Star(new Point2D(450, 450), 18000000000000, 32);
@@ -54,17 +87,70 @@
 	    System.Core.add("Earth", earthStar);
 	    System.Core.add("Mars", marsStar);
 	    System.Core.add("Venus", venusStar);
-		
-		System.View.bindSetMass($('#txtMassEarth'), 'change', 'Earth'); 
-		System.View.bindSetMass($('#txtMassMars'), 'change', 'Mars'); 
-		System.View.bindSetMass($('#txtMassVenus'), 'change', 'Venus'); 
-		System.View.bindSetRadius($('#txtRadiusEarth'), 'change', 'Earth'); 
-		System.View.bindSetRadius($('#txtRadiusMars'), 'change', 'Mars');
-		System.View.bindSetRadius($('#txtRadiusVenus'), 'change', 'Venus'); 
 
-	    var canv = $('#myCanvas'); 
-		
-		System.View.bindCanvas(canv); 
+	    System.View.bindSetMass($('#txtMassEarth'), 'change', 'Earth');
+	    System.View.bindSetMass($('#txtMassMars'), 'change', 'Mars');
+	    System.View.bindSetMass($('#txtMassVenus'), 'change', 'Venus');
+	    System.View.bindSetRadius($('#txtRadiusEarth'), 'change', 'Earth');
+	    System.View.bindSetRadius($('#txtRadiusMars'), 'change', 'Mars');
+	    System.View.bindSetRadius($('#txtRadiusVenus'), 'change', 'Venus');
+
+	    var canv = $('#myCanvas');
+
+	    System.View.bindCanvas(canv);
+
+	    /*NOTE THIS IS ONLY TO TEST PASSING EVENTS TO THE VIEW RENDERING LOOP (IT WORKS)
+
+	    var mouseIsDown = false;
+	    var inCircle = false;
+	    var trajectories = new Object();
+
+	    System.View.onMouseDown = function (x, y) {
+	        mouseIsDown = true;
+	        var nearStarName = findNearestStar(x, y);
+	        var nearStar = System.Core.stars[nearStarName];
+	        var radialDist = nearStar.getPosition().distance(x, y);
+	        if (radialDist > nearStar.Radius) {
+	            trajectories['t'] = { start: new Point2D(x, y), end: null };
+	            inCircle = false;
+	        }
+	    }
+
+	    System.View.onMouseUp = function (x, y) {
+	        if (!inCircle) {
+	            if (trajectories.hasOwnProperty('t')) {
+	                var t = trajectories['t'];
+	                var v = t.end.seperation(t.start);
+	                var s = new Vector2((v.x / 10), (v.y / 10));
+	                var p = new Projectile(t.start, s);
+	                var key = System.Core.add(p);
+	                p.onCollide = function (p) {
+	                    System.Core.remove(key);
+	                };
+	                trajectories['t'] = null;
+	            }
+	        }
+	    }
+
+	    System.View.onMouseMove = function (x, y) {
+	        if (mouseIsDown && !inCircle) {
+	            if (trajectories['t'] != null && trajectories['t'].hasOwnProperty('end'))
+	                trajectories['t'].end = new Point2D(x, y);
+	            System.View.bindToRenderingLoop('trajectories', function (ctx) {
+	                for (var key in trajectories) {
+	                    if (trajectories[key] != null && trajectories[key].hasOwnProperty('start')) {
+	                        var s = trajectories[key].start;
+	                        var e = trajectories[key].end;
+	                        ctx.beginPath();
+	                        ctx.moveTo(s.x, s.y);
+	                        ctx.lineTo(e.x, e.y);
+	                        ctx.closePath();
+	                        ctx.stroke();
+	                    }
+	                }
+	            });
+	        }
+	    } */
 
 	    setInterval(System.View.draw, interval);
 	}); 
