@@ -7,7 +7,7 @@
 
 	var _gconstant = 6.674 * Math.pow(10, -11); 
 	
-	var interval = 20; 
+	var interval = 10; 
  
 	function stableOrbit(dist, x, y) {
 	 
@@ -77,9 +77,9 @@
 
 	$(document).ready(function () {
 
-	    var earthStar = new Star(new Point2D(450, 450), 18000000000000, 32);
-	    var marsStar = new Star(new Point2D(750, 750), 18000000000000, 32);
-	    var venusStar = new Star(new Point2D(150, 150), 18000000000000, 32);
+	    var earthStar = new Star(new Point2D(450, 450), 1800000000000, 32);
+	    var marsStar = new Star(new Point2D(750, 750), 1800000000000, 32);
+	    var venusStar = new Star(new Point2D(150, 150), 1800000000000, 32);
 
 	    earthStar.Color = "Blue";
 	    marsStar.Color = "Red";
@@ -161,7 +161,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>HTML5 Bouncing Ball</title>
+<title>HTML5 Gravity Engine</title>
 <style type="text/css">
 body { background-color:#ededed; font:normal 12px/18px Arial, Helvetica, sans-serif; }
 #container { width:1900px; margin:0 auto; }
