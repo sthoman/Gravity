@@ -40,7 +40,8 @@
 
 			startingdist += 50; 			
 		}
-	}
+    }
+
 
 	//TEMPORARY, this belongs in view
 
@@ -107,51 +108,53 @@
 	    var trajectories = new Object();
 
 	    System.View.onMouseDown = function (x, y) {
-	        mouseIsDown = true;
-	        var nearStarName = findNearestStar(x, y);
-	        var nearStar = System.Core.stars[nearStarName];
-	        var radialDist = nearStar.getPosition().distance(x, y);
-	        if (radialDist > nearStar.Radius) {
-	            trajectories['t'] = { start: new Point2D(x, y), end: null };
-	            inCircle = false;
-	        }
+	    mouseIsDown = true;
+	    var nearStarName = findNearestStar(x, y);
+	    var nearStar = System.Core.stars[nearStarName];
+	    var radialDist = nearStar.getPosition().distance(x, y);
+	    if (radialDist > nearStar.Radius) {
+	    trajectories['t'] = { start: new Point2D(x, y), end: null };
+	    inCircle = false;
+	    }
 	    }
 
 	    System.View.onMouseUp = function (x, y) {
-	        if (!inCircle) {
-	            if (trajectories.hasOwnProperty('t')) {
-	                var t = trajectories['t'];
-	                var v = t.end.seperation(t.start);
-	                var s = new Vector2((v.x / 10), (v.y / 10));
-	                var p = new Projectile(t.start, s);
-	                var key = System.Core.add(p);
-	                p.onCollide = function (p) {
-	                    System.Core.remove(key);
-	                };
-	                trajectories['t'] = null;
-	            }
-	        }
+	    if (!inCircle) {
+	    if (trajectories.hasOwnProperty('t')) {
+	    var t = trajectories['t'];
+	    var v = t.end.seperation(t.start);
+	    var s = new Vector2((v.x / 10), (v.y / 10));
+	    var p = new Projectile(t.start, s);
+	    var key = System.Core.add(p);
+	    p.onCollide = function (p) {
+	    System.Core.remove(key);
+	    };
+	    trajectories['t'] = null;
+	    }
+	    }
 	    }
 
 	    System.View.onMouseMove = function (x, y) {
-	        if (mouseIsDown && !inCircle) {
-	            if (trajectories['t'] != null && trajectories['t'].hasOwnProperty('end'))
-	                trajectories['t'].end = new Point2D(x, y);
-	            System.View.bindToRenderingLoop('trajectories', function (ctx) {
-	                for (var key in trajectories) {
-	                    if (trajectories[key] != null && trajectories[key].hasOwnProperty('start')) {
-	                        var s = trajectories[key].start;
-	                        var e = trajectories[key].end;
-	                        ctx.beginPath();
-	                        ctx.moveTo(s.x, s.y);
-	                        ctx.lineTo(e.x, e.y);
-	                        ctx.closePath();
-	                        ctx.stroke();
-	                    }
-	                }
-	            });
-	        }
+	    if (mouseIsDown && !inCircle) {
+	    if (trajectories['t'] != null && trajectories['t'].hasOwnProperty('end'))
+	    trajectories['t'].end = new Point2D(x, y);
+	    System.View.bindToRenderingLoop('trajectories', function (ctx) {
+	    for (var key in trajectories) {
+	    if (trajectories[key] != null && trajectories[key].hasOwnProperty('start')) {
+	    var s = trajectories[key].start;
+	    var e = trajectories[key].end;
+	    ctx.beginPath();
+	    ctx.moveTo(s.x, s.y);
+	    ctx.lineTo(e.x, e.y);
+	    ctx.closePath();
+	    ctx.stroke();
+	    }
+	    }
+	    });
+	    }
 	    } */
+
+	    //System.View.beginLoop(); 
 
 	    setInterval(System.View.draw, interval);
 	}); 
